@@ -206,7 +206,6 @@ def slabgcn():
         "--train",
         action="store_true",
         help="Specify if model is to be trained. Requires specification of a training config.",
-        required=True
     )
 
     # Option to make predictions
@@ -231,7 +230,6 @@ def slabgcn():
         "--csv",
         action="store",
         help="Path to csv file containing names of files in the dataset and corresponding properties.",
-        required=True
     )
 
     # Option to specify training configuration
@@ -284,8 +282,14 @@ def slabgcn():
             config = json.load(f)
 
         # Add dataset path and csv path to config
-        config["dataset_path"] = str(args.dataset)
-        config["csv_path"] = str(args.csv)
+        if args.dataset is None:
+            raise Exception("Path to dataset must be specified using --dataset")
+        else:
+            config["dataset_path"] = str(args.dataset)
+        if args.csv is None:
+            raise Exception("Path to csv file must be specified using --csv")
+        else:
+            config["csv_path"] = str(args.csv)
 
         # Perform training
         train(config, save_path, test, int(args.seed), int(args.epochs))
