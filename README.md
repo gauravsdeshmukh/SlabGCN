@@ -23,7 +23,7 @@ conda activate slabgcn
 
 3. Clone this repository and navigate to the directory.
 ```bash
-git clone https://github.itap.purdue.edu/GreeleyGroup/SlabGCN.git
+git clone https://github.com/gauravsdeshmukh/SlabGCN.git
 cd SlabGCN
 ```
 
@@ -136,4 +136,4 @@ An explanation for all the keys in all the configs is provided below:
 - `conv_size`: List with length same as the number of paritions. Specify the number of nodes in each convolutional layer for each partition.
 
 ## Contact and Citation
-If you have any queries about the code, please contact the lead developer Gaurav Deshmukh over email (gaurav dot deshmukh at outlook dot com). If this code has helped you in your research, please consider citing the [SlabGCN manuscript](https://pubs.acs.org/doi/10.1021/acs.chemmater.5c02484)
+If you have any queries about the code, please contact the lead developer Gaurav Deshmukh over email (gaurav dot deshmukh at outlook dot com). If this code has helped you in your research, please consider citing the [SlabGCN manuscript](https://pubs.acs.org/doi/10.1021/acs.chemmater.5c02484).
