@@ -75,7 +75,7 @@ unpack_archive(archive_path, unpack_path)
 dataset_path = os.path.join(unpack_path, "structs")
 csv_path = os.path.join(dataset_path, "name_prop.csv")
 save_path = os.path.join(home, "test_model")
-os.system(f"slabgcn --dataset {dataset_path} --csv {csv_path} --epochs 1 --save {save_path}")
+os.system(f"slabgcn --train --dataset {dataset_path} --csv {csv_path} --epochs 1 --save {save_path}")
 print("Test completed successfully.")
 
 # Installation complete
