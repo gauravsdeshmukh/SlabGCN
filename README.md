@@ -67,12 +67,13 @@ is provided under data/structs called `name_prop.csv`.
 
 3. Go to your parent working directory (that is, `model_training`) and copy config by entering the following command:
 ```bash
-copy_config
+copy-config
 ```
 
 4. Open the configuration file and make appropriate changes. A full description of all the keys
 and their corresponding values is provided in the next section. Ensure that `use_GPU` is set to
-`true` if the repo is installed on GPU and `false` if the repo is installed on CPU.
+`false` if the repo is installed on CPU; if it is installed on GPU, `use_GPU` can either be `true`
+or `false` based on whether you want to utilize the GPU for model training and prediction.
 
 5. Train the model by using the `slabgcn` command-line utility. It can be used either
 in `--train` mode or `--predict` mode. The former requires the mandatory specification of 

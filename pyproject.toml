@@ -21,7 +21,7 @@ dependencies = [
 
 [project.scripts]
 slabgcn =  "slabgcn:slabgcn"
-setup_slabgcn = "install:install"
+copy-config = "slabgcn:copy_config"
 
 [tool.setuptools.packages.find]
 where = ["."]
