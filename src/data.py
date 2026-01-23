@@ -127,7 +127,9 @@ class AtomsDataset(Dataset):
             include_neighbors = [include_neighbors] * (len(layer_cutoffs) + 1)
 
         # Choose partition function
-        if isinstance(self.layer_cutoffs[0], int):
+        if self.layer_cutoffs == []:
+            part_func = partition_structure
+        elif isinstance(self.layer_cutoffs[0], int):
             part_func = partition_structure_by_layers
         else:
             part_func = partition_structure
@@ -307,7 +309,9 @@ class AtomsDatapoints(InMemoryDataset):
             include_neighbors = [include_neighbors] * (len(layer_cutoffs) + 1)
 
         # Choose partition function
-        if isinstance(self.layer_cutoffs[0], int):
+        if self.layer_cutoffs == []:
+            part_func = partition_structure
+        elif isinstance(self.layer_cutoffs[0], int):
             part_func = partition_structure_by_layers
         else:
             part_func = partition_structure

@@ -1,6 +1,4 @@
 {
-    "dataset_path": "",
-    "csv_path": "",
     "layer_cutoffs": [2, 4],
     "node_features": [
         ["atomic_number", "coordination", "electron_affinity", "valence", "dband_center"],
@@ -17,7 +15,7 @@
         "val": 0.1,
         "test": 0.1
     },
-    "use_GPU": "True",
+    "use_GPU": true,
     "batch_size": 64,
     "n_hidden": 2,
     "hidden_size": 65,

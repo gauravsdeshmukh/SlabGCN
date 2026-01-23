@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "slabgcn"
+version = "0.1.0"
+authors = [{name = "Gaurav Deshmukh", email = "gauravsdeshmukh@outlook.com"}]
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pymatgen",
+    "ase",
+    "scikit-learn",
+    "seaborn",
+    "mendeleev",
+    "torch>=2.5",
+    "torch_geometric"
+]
+
+[project.scripts]
+slabgcn =  "slabgcn:slabgcn"
+setup_slabgcn = "install:install"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools]
+py-modules = ["slabgcn", "install"]

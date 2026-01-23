@@ -9,13 +9,17 @@ import pandas as pd
 import torch
 
 from ase.io import read
-from sklearn.metrics import r2_score
 
-from src.constants import REPO_PATH
 from src.data import load_dataset, load_datapoints
-from src.samplers import RandomSampler, RandomPropSampler
+from src.samplers import RandomSampler
 from src.train import Model
 from src.utils import create_dataloaders, get_composition_string
+from src.constants import REPO_PATH
+from shutil import copyfile
+
+import warnings
+
+warnings.filterwarnings("ignore", category=UserWarning, message="Occupancies present but no occupancy info for")
 
 
 def train(config, save_path, test, seed, epochs):
@@ -119,8 +123,8 @@ def train(config, save_path, test, seed, epochs):
         pred_dict = model.predict(dataset, sample_idx["test"], return_targets=True)
         df_pred = pd.DataFrame(pred_dict)
         for i in range(global_config["n_outputs"]):
-            df_pred[f"predictions_{i}"] = 0
-            df_pred[f"targets_{i}"] = 0
+            df_pred[f"predictions_{i}"] = 0.0
+            df_pred[f"targets_{i}"] = 0.0
             for j in range(df_pred.shape[0]):
                 df_pred.loc[j, f"predictions_{i}"] = df_pred.loc[j, "predictions"][i]
                 df_pred.loc[j, f"targets_{i}"] = df_pred.loc[j, "targets"][i]
@@ -172,7 +176,7 @@ def predict(model_path, structures, results_dir_path):
     pred_dict.pop("targets", [])
     df_pred = pd.DataFrame(pred_dict)
     for i in range(model.global_config["n_outputs"]):
-        df_pred[f"predictions_{i}"] = 0
+        df_pred[f"predictions_{i}"] = 0.0
         for j in range(df_pred.shape[0]):
             df_pred.loc[j, f"predictions_{i}"] = df_pred.loc[j, "predictions"][i]
     df_pred.rename(columns={"indices": "index"}, inplace=True)
@@ -189,8 +193,7 @@ def predict(model_path, structures, results_dir_path):
     df_pred.to_csv(os.path.join(results_dir_path, "pred.csv"))
 
 
-
-if __name__ == "__main__":
+def slabgcn():
     #### Create Argument Parser ####
     parser = argparse.ArgumentParser(
         prog="SlabGCN",
@@ -202,7 +205,8 @@ if __name__ == "__main__":
         "-t",
         "--train",
         action="store_true",
-        help="Specify if model is to be trained. Requires specification of a training config."
+        help="Specify if model is to be trained. Requires specification of a training config.",
+        required=True
     )
 
     # Option to make predictions
@@ -210,33 +214,50 @@ if __name__ == "__main__":
         "-p",
         "--predict",
         action="store_true",
-        help="Specify if model is to be used for prediction. Requires specification of model path."
+        help="Specify if model is to be used for prediction. Requires specification of model path.",
+    )
+
+    # Path to dataset
+    parser.add_argument(
+        "-d",
+        "--dataset",
+        action="store",
+        help="Path to dataset containing .cif files of structures.",
+    )
+
+    # Path to csv file
+    parser.add_argument(
+        "-cv",
+        "--csv",
+        action="store",
+        help="Path to csv file containing names of files in the dataset and corresponding properties.",
+        required=True
     )
 
     # Option to specify training configuration
-    parser.add_argument("-c", "--config", action="store")
+    parser.add_argument("-c", "--config", action="store", help="Path to config file.")
 
     # Option to specify model path for prediction
-    parser.add_argument("-m", "--model", action="store")
+    parser.add_argument("-m", "--model", action="store", help="Path to model directory (for prediction).")
 
     # Option to specify structure(s)
-    parser.add_argument("-st", "--structs", action="extend", nargs="+")
+    parser.add_argument("-st", "--structs", action="extend", nargs="+", help="Path(s) to structures (.cif files) for prediction.")
 
     # Optional arguments
     # Option to specify where to save trained model (current directory by default)
-    parser.add_argument("-s", "--save", action="store", default=".")
+    parser.add_argument("-s", "--save", action="store", default=".", help="Path where the trained model is to be saved.")
 
     # Option to specify whether to save test results (False by default)
-    parser.add_argument("-nt", "--no-test", action="store_true", default=False)
+    parser.add_argument("-nt", "--no-test", action="store_true", default=False, help="Specify to prevent predictions on test set after training.")
 
     # Option to specify where to save the results (current directory by default)
-    parser.add_argument("-r", "--results", action="store", default=".")
+    parser.add_argument("-r", "--results", action="store", default=".", help="Path where the predicted results are to be saved.")
 
     # Option to specify seed (0 by default; only required for training)
-    parser.add_argument("-sd", "--seed", action="store", default=0)
+    parser.add_argument("-sd", "--seed", action="store", default=0, help="Seed for randomization.")
 
     # Option to specify number of epochs (500 by default)
-    parser.add_argument("-e", "--epochs", action="store", default=500)
+    parser.add_argument("-e", "--epochs", action="store", default=500, help="Number of epochs for training.")
 
     # Parse arguments
     args = parser.parse_args()
@@ -244,17 +265,27 @@ if __name__ == "__main__":
     ### TRAINING
     if args.train:
         # Config path
-        config_path = str(args.config)
+        if args.config is None:
+            config_path = REPO_PATH / "config.json"
+        else:
+            config_path = str(args.config)
+
         # Save path
         if args.save == ".":
             save_path = os.path.join(os.getcwd(), "slabgcn_model")
         else:
             save_path = str(args.save)
+
         # Check test
         test = not args.no_test
+
         # Read config
         with open(config_path, "r") as f:
             config = json.load(f)
+
+        # Add dataset path and csv path to config
+        config["dataset_path"] = str(args.dataset)
+        config["csv_path"] = str(args.csv)
 
         # Perform training
         train(config, save_path, test, int(args.seed), int(args.epochs))
@@ -266,6 +297,24 @@ if __name__ == "__main__":
         else:
             results_dir_path = str(args.results)
         # Path to structures
-        struct_paths = [os.path.join(os.getcwd(), str(s)) for s in args.structs]
+        if args.structs is None:
+            raise Exception("If using --predict mode, provide structures using --structs.")
+        else:
+            struct_paths = [os.path.join(os.getcwd(), str(s)) for s in args.structs]
+
+        # Path to model
+        if args.model is None:
+            raise Exception("If using --predict mode, provide trained model directory using --model.")
+
         predict(args.model, struct_paths, results_dir_path)
+
+    else:
+        raise Exception("Either --train or --predict needs to be provided.")
         
+def copy_config():
+    # Copy config file to current directory
+    home = os.getcwd()
+    config_path = REPO_PATH / "config.json"
+
+    # Copy file
+    copyfile(config_path, os.path.join(home, "config.json"))
